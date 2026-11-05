@@ -19,6 +19,9 @@ if (-not (Test-Dotnet10)) {
 }
 
 $feed = 'https://api.nuget.org/v3/index.json'
+# A local copy of every package (folder next to this script) means no internet is needed.
+$offline = Join-Path $PSScriptRoot 'offline-packages'
+if (Test-Path $offline) { $feed = $offline; Write-Host "Using local packages in $offline" }
 $log = Join-Path $PSScriptRoot 'run.log'
 Set-Content $log "PDF Convertor run $(Get-Date -Format o)"
 
@@ -33,12 +36,12 @@ function Invoke-Logged([string]$exe, [string[]]$arguments) {
 }
 
 Write-Host 'Checking connection to nuget.org...'
-try {
+if ($feed -ne $offline) { try {
     Invoke-WebRequest $feed -UseBasicParsing -TimeoutSec 20 | Out-Null
     Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/markdig/index.json' -UseBasicParsing -TimeoutSec 20 | Out-Null
 } catch {
     throw "Cannot reach nuget.org ($($_.Exception.Message)). Check internet, VPN, proxy, firewall or antivirus HTTPS scanning, then run again."
-}
+} }
 
 # Drop cached "package not found" results from earlier failed restores.
 Invoke-Logged dotnet @('nuget', 'locals', 'all', '--clear') | Out-Null
