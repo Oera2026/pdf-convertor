@@ -20,7 +20,7 @@
         <!-- Header / title bar -->
         <Grid x:Name="TitleBarArea" Height="48" Padding="16,0,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
             <local:Icon Width="20" Height="20" Data="{StaticResource IconConvert}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Text="PDFile" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="PDF Convertor" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="10,0,0,0" VerticalAlignment="Center" />
         </Grid>
 
         <StackPanel Grid.Row="1" Margin="24,0,24,8" Spacing="6">

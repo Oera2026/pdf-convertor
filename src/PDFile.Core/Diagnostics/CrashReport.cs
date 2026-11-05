@@ -13,7 +13,7 @@ public static class CrashReport
     public static string Build(Exception ex, string origin)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"PDFile crash report {DateTime.Now:O}");
+        sb.AppendLine($"PDF Convertor crash report {DateTime.Now:O}");
         sb.AppendLine($"Origin: {origin}");
         sb.AppendLine($"App version: {Assembly.GetEntryAssembly()?.GetName().Version ?? typeof(CrashReport).Assembly.GetName().Version}");
         sb.AppendLine($".NET: {RuntimeInformation.FrameworkDescription}");

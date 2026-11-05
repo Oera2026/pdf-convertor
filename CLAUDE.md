@@ -1,4 +1,4 @@
-# PDFile
+# PDF Convertor
 
 Windows 11 desktop tool (C#, .NET 10, WinUI 3) that batch-converts a folder of Word/Excel/PowerPoint/image/text files to PDF, either separately or merged into one PDF. Personal/internal use. Office is installed, so Office COM is the only Office engine (no LibreOffice).
 

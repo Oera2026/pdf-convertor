@@ -50,7 +50,7 @@ internal static class OfficeDiagnostics
     {
         string s = string.Create(CultureInfo.InvariantCulture,
             $"{app} {version}: timed out after {timeout.TotalSeconds:0}s in stage '{stage}' for '{src}' ({size:N0} bytes). ")
-            + (killed ? "The Office process was killed" : "The Office instance was not started by PDFile so it was NOT killed (it may stay stuck)")
+            + (killed ? "The Office process was killed" : "The Office instance was not started by PDF Convertor so it was NOT killed (it may stay stuck)")
             + "; a fresh instance is used for the next file.";
         return stage == "open" ? s + " Typical causes: password prompt, Protected View or a modal dialog." : s;
     }

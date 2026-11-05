@@ -82,7 +82,7 @@ internal static class Fatal
             var dialog = new ContentDialog
             {
                 XamlRoot = window.Content.XamlRoot,
-                Title = "PDFile hit an unexpected error and must close",
+                Title = "PDF Convertor hit an unexpected error and must close",
                 Content = panel,
                 PrimaryButtonText = "Copy full report",
                 SecondaryButtonText = "Open report folder",
@@ -107,7 +107,7 @@ internal static class Fatal
         try
         {
             var report = path.Length > 0 ? path : "(the report could not be saved; see the log folder)";
-            _ = MessageBoxW(0, $"PDFile hit an unexpected error and must close.\n\n{ex.GetType().Name}: {ex.Message}\n\nOrigin: {origin}\nFull report: {report}", "PDFile", 0x10 | 0x40000); // ICONERROR | TOPMOST
+            _ = MessageBoxW(0, $"PDF Convertor hit an unexpected error and must close.\n\n{ex.GetType().Name}: {ex.Message}\n\nOrigin: {origin}\nFull report: {report}", "PDFile", 0x10 | 0x40000); // ICONERROR | TOPMOST
         }
         finally
         {

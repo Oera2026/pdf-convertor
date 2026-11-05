@@ -14,7 +14,7 @@ public sealed partial class MainWindow : Window
     {
         Vm = vm;
         InitializeComponent();
-        Title = "PDFile";
+        Title = "PDF Convertor";
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBarArea);
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 780));

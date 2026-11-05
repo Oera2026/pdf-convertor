@@ -258,7 +258,7 @@ internal abstract class OfficeApp : IConverter, IAsyncDisposable, IDisposable
         }
         s.HandedOver = true;
         app.Visible = true;
-        Log.Warn($"{Name}: {open} document(s) not opened by PDFile are in its instance; it was made visible and left running instead of quitting.");
+        Log.Warn($"{Name}: {open} document(s) not opened by PDF Convertor are in its instance; it was made visible and left running instead of quitting.");
     }
 
     public ValueTask DisposeAsync() => new(Task.Run(Dispose));

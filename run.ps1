@@ -22,6 +22,6 @@ Write-Host 'Restoring NuGet packages (Windows App SDK, analyzers)...'
 dotnet restore PDFile.slnx
 if ($LASTEXITCODE) { throw 'dotnet restore failed.' }
 
-Write-Host 'Building and starting PDFile...'
+Write-Host 'Building and starting PDF Convertor...'
 dotnet run --project src/PDFile.App -c Release
-if ($LASTEXITCODE) { throw 'PDFile exited with an error. See %LOCALAPPDATA%\PDFile\logs.' }
+if ($LASTEXITCODE) { throw 'PDF Convertor exited with an error. See %LOCALAPPDATA%\PDFile\logs.' }

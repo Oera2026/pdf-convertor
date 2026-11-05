@@ -1,4 +1,4 @@
-# PDFile
+# PDF Convertor
 
 Windows 11 tool that batch-converts a folder (or dropped files) of Word, Excel, PowerPoint, image and text files to PDF, either as separate PDFs or as one merged PDF. One window, no settings.
 
