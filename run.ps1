@@ -19,17 +19,46 @@ if (-not (Test-Dotnet10)) {
 }
 
 $feed = 'https://api.nuget.org/v3/index.json'
-Write-Host 'Checking connection to nuget.org...'
-try { Invoke-WebRequest $feed -UseBasicParsing -TimeoutSec 20 | Out-Null }
-catch { throw "Cannot reach $feed ($($_.Exception.Message)). Check internet, VPN, proxy or firewall, then run again." }
+$log = Join-Path $PSScriptRoot 'run.log'
+Set-Content $log "PDF Convertor run $(Get-Date -Format o)"
 
-# Drop any cached "package not found" results from earlier failed restores.
-dotnet nuget locals http-cache --clear | Out-Null
+# Run a native command, show + log its output, return its exit code.
+# (Native stderr must not be turned into PowerShell errors, so relax the preference around it.)
+function Invoke-Logged([string]$exe, [string[]]$arguments) {
+    $prev = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    & $exe @arguments 2>&1 | ForEach-Object { "$_" } | Tee-Object -FilePath $log -Append | Out-Host
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $prev
+    return $code
+}
+
+Write-Host 'Checking connection to nuget.org...'
+try {
+    Invoke-WebRequest $feed -UseBasicParsing -TimeoutSec 20 | Out-Null
+    Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/markdig/index.json' -UseBasicParsing -TimeoutSec 20 | Out-Null
+} catch {
+    throw "Cannot reach nuget.org ($($_.Exception.Message)). Check internet, VPN, proxy, firewall or antivirus HTTPS scanning, then run again."
+}
+
+# Drop cached "package not found" results from earlier failed restores.
+Invoke-Logged dotnet @('nuget', 'locals', 'all', '--clear') | Out-Null
 
 Write-Host 'Restoring NuGet packages (Windows App SDK, analyzers)...'
-dotnet restore PDFile.slnx --source $feed --force 2>&1 | Tee-Object -FilePath run.log
-if ($LASTEXITCODE) { throw 'dotnet restore failed. Full output is in run.log.' }
+$code = Invoke-Logged dotnet @('restore', 'PDFile.slnx', '--source', $feed, '--force')
+if ($code) {
+    Write-Host 'Restore failed. Retrying with certificate revocation checks off and detailed logging...'
+    $env:NUGET_CERT_REVOCATION_MODE = 'offline'
+    $code = Invoke-Logged dotnet @('restore', 'PDFile.slnx', '--source', $feed, '--force', '-v', 'detailed')
+}
+if ($code) {
+    Add-Content $log "`n=== DIAGNOSTICS ==="
+    Invoke-Logged dotnet @('--info') | Out-Null
+    Invoke-Logged dotnet @('nuget', 'list', 'source') | Out-Null
+    Add-Content $log ("Proxy: " + [Net.WebRequest]::GetSystemWebProxy().GetProxy($feed))
+    Add-Content $log ("HTTP(S)_PROXY env: $env:HTTP_PROXY / $env:HTTPS_PROXY")
+    throw "dotnet restore failed. Send me the contents of $log"
+}
 
 Write-Host 'Building and starting PDF Convertor...'
-dotnet run --project src/PDFile.App -c Release --no-restore 2>&1 | Tee-Object -FilePath run.log -Append
-if ($LASTEXITCODE) { throw 'PDF Convertor exited with an error. Full output is in run.log; app logs are in %LOCALAPPDATA%\PDFile\logs.' }
+$code = Invoke-Logged dotnet @('run', '--project', 'src/PDFile.App', '-c', 'Release', '--no-restore')
+if ($code) { throw "PDF Convertor exited with an error. Full output is in $log; app logs are in %LOCALAPPDATA%\PDFile\logs." }
