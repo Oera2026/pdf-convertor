@@ -22,9 +22,9 @@ internal static class Shell
         Clipboard.Flush(); // keep the text after the app exits (crash dialog)
     }
 
-    public static Geometry Icon(string key) => (Geometry)Application.Current.Resources[key];
+    public static string Icon(string key) => (string)Application.Current.Resources[key];
 
-    public static Geometry IconForExtension(string ext) => Icon(ext.ToLowerInvariant() switch
+    public static string IconForExtension(string ext) => Icon(ext.ToLowerInvariant() switch
     {
         ".doc" or ".docx" or ".docm" or ".dot" or ".dotx" or ".rtf" or ".odt" => "IconWord",
         ".xls" or ".xlsx" or ".xlsm" or ".xlsb" or ".csv" or ".ods" => "IconSheet",

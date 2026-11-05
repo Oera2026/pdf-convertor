@@ -5,7 +5,7 @@
     <!-- Stroke follows Foreground, so icons track light/dark and button states; the 24x24 canvas scales to any size/DPI. -->
     <Viewbox>
         <Canvas Width="24" Height="24">
-            <Path Data="{x:Bind Data, Mode=OneWay}" Stroke="{x:Bind Foreground, Mode=OneWay}" StrokeThickness="1.75"
+            <Path x:Name="Shape" Stroke="{x:Bind Foreground, Mode=OneWay}" StrokeThickness="1.75"
                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
         </Canvas>
     </Viewbox>

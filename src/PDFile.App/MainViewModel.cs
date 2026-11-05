@@ -16,7 +16,7 @@ public sealed class FileItem(ConversionJob job) : Observable
 
     public ConversionJob Job { get; } = job;
     public string RelativePath => Job.RelativePath;
-    public Geometry TypeIcon { get; } = Shell.IconForExtension(Path.GetExtension(job.SourcePath));
+    public string TypeIcon { get; } = Shell.IconForExtension(Path.GetExtension(job.SourcePath));
 
     public bool IsIncluded { get => _included; set => Set(ref _included, value); }
 
@@ -97,7 +97,7 @@ public sealed class MainViewModel : Observable
             return _isRunning ? "Stop" : "Convert";
         }
     }
-    public Geometry ConvertIcon => Shell.Icon(IconKey);
+    public string ConvertIcon => Shell.Icon(IconKey);
     private string IconKey
     {
         get
