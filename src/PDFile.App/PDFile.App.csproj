@@ -8,7 +8,6 @@
     <Version>1.0.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
     <UseWinUI>true</UseWinUI>
     <!-- Unpackaged + self-contained: no MSIX, no Windows App SDK runtime installer needed. -->
@@ -16,7 +15,7 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <SelfContained>true</SelfContained>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(_IsPublishing)' == 'true'">true</PublishReadyToRun>
     <!-- Program.cs is our own Main (crash handling wraps startup). -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
