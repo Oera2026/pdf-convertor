@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#0F6CBD"/>
+  <!-- back page -->
+  <path d="M96 60H160L196 96V176A14 14 0 0 1 182 190H96A14 14 0 0 1 82 176V74A14 14 0 0 1 96 60Z" fill="#fff" fill-opacity=".45" transform="translate(-22 -4)"/>
+  <!-- front page with folded corner -->
+  <path d="M104 58H156L198 100V182A16 16 0 0 1 182 198H104A16 16 0 0 1 88 182V74A16 16 0 0 1 104 58Z" fill="#fff"/>
+  <path d="M156 58V90A10 10 0 0 0 166 100H198Z" fill="#0F6CBD" fill-opacity=".25"/>
+  <!-- arrow into the page -->
+  <path d="M112 144H162M142 122L164 144L142 166" fill="none" stroke="#0F6CBD" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

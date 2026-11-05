@@ -1,0 +1,3 @@
+root = false
+[*.cs]
+dotnet_diagnostic.S2325.severity = none   # XAML event handlers must be instance methods
