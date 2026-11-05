@@ -18,10 +18,18 @@ if (-not (Test-Dotnet10)) {
     if (-not (Test-Dotnet10)) { throw '.NET 10 SDK install finished but dotnet was not found. Open a new terminal and run again.' }
 }
 
+$feed = 'https://api.nuget.org/v3/index.json'
+Write-Host 'Checking connection to nuget.org...'
+try { Invoke-WebRequest $feed -UseBasicParsing -TimeoutSec 20 | Out-Null }
+catch { throw "Cannot reach $feed ($($_.Exception.Message)). Check internet, VPN, proxy or firewall, then run again." }
+
+# Drop any cached "package not found" results from earlier failed restores.
+dotnet nuget locals http-cache --clear | Out-Null
+
 Write-Host 'Restoring NuGet packages (Windows App SDK, analyzers)...'
-dotnet restore PDFile.slnx 2>&1 | Tee-Object -FilePath run.log
+dotnet restore PDFile.slnx --source $feed --force 2>&1 | Tee-Object -FilePath run.log
 if ($LASTEXITCODE) { throw 'dotnet restore failed. Full output is in run.log.' }
 
 Write-Host 'Building and starting PDF Convertor...'
-dotnet run --project src/PDFile.App -c Release 2>&1 | Tee-Object -FilePath run.log -Append
+dotnet run --project src/PDFile.App -c Release --no-restore 2>&1 | Tee-Object -FilePath run.log -Append
 if ($LASTEXITCODE) { throw 'PDF Convertor exited with an error. Full output is in run.log; app logs are in %LOCALAPPDATA%\PDFile\logs.' }
