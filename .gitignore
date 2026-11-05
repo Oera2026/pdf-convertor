@@ -4,3 +4,4 @@ obj/
 *.user
 graphify-out/cache/
 publish/
+run.log

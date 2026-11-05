@@ -19,9 +19,9 @@ if (-not (Test-Dotnet10)) {
 }
 
 Write-Host 'Restoring NuGet packages (Windows App SDK, analyzers)...'
-dotnet restore PDFile.slnx
-if ($LASTEXITCODE) { throw 'dotnet restore failed.' }
+dotnet restore PDFile.slnx 2>&1 | Tee-Object -FilePath run.log
+if ($LASTEXITCODE) { throw 'dotnet restore failed. Full output is in run.log.' }
 
 Write-Host 'Building and starting PDF Convertor...'
-dotnet run --project src/PDFile.App -c Release
-if ($LASTEXITCODE) { throw 'PDF Convertor exited with an error. See %LOCALAPPDATA%\PDFile\logs.' }
+dotnet run --project src/PDFile.App -c Release 2>&1 | Tee-Object -FilePath run.log -Append
+if ($LASTEXITCODE) { throw 'PDF Convertor exited with an error. Full output is in run.log; app logs are in %LOCALAPPDATA%\PDFile\logs.' }
