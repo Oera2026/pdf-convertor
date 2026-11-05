@@ -1,0 +1,7 @@
+root = true
+[*.cs]
+indent_size = 4
+dotnet_diagnostic.VSTHRD100.severity = error   # no async void
+dotnet_diagnostic.S108.severity = error        # empty block
+dotnet_diagnostic.S2486.severity = error       # exception swallowed
+dotnet_diagnostic.S1186.severity = none

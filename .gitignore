@@ -1,0 +1,6 @@
+bin/
+obj/
+.vs/
+*.user
+graphify-out/cache/
+publish/

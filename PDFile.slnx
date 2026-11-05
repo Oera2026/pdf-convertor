@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PDFile.Core/PDFile.Core.csproj" />
+    <Project Path="src/PDFile.Office/PDFile.Office.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PDFile.Tests/PDFile.Tests.csproj" />
+  </Folder>
+</Solution>
