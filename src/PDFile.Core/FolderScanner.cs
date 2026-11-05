@@ -25,7 +25,8 @@ public static class FolderScanner
                     }
                     else if (entry is DirectoryInfo)
                     {
-                        if (includeSubfolders && !entry.Attributes.HasFlag(FileAttributes.ReparsePoint)) pending.Push(entry.FullName);
+                        // OneDrive/cloud placeholder folders are reparse points too: skip only symlinks and junctions (they can loop).
+                        if (includeSubfolders && (!entry.Attributes.HasFlag(FileAttributes.ReparsePoint) || entry.LinkTarget is null)) pending.Push(entry.FullName);
                     }
                     else if (entry.Name.StartsWith("~$", StringComparison.Ordinal) || !canConvert(entry.Extension.ToLowerInvariant()))
                     {

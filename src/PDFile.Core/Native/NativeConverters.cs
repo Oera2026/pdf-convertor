@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -58,13 +59,47 @@ internal sealed class ImageConverter : NativeConverter
     protected override string[] Extensions => [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff"];
 
     // PDFsharp's core build only decodes PNG/JPEG; BMP/GIF/TIFF are re-encoded to PNG with System.Drawing (Windows only).
-    private static XImage Load(string source, MemoryStream png)
+    // PDF ignores EXIF orientation, so sideways phone photos (JPEG) are rotated with System.Drawing too.
+    private static XImage Load(string source, MemoryStream buffer)
     {
-        if (Path.GetExtension(source).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg") return XImage.FromFile(source);
-        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("BMP/GIF/TIFF conversion needs Windows");
-        ToPng(source, png);
-        png.Position = 0;
-        return XImage.FromStream(png);
+        var ext = Path.GetExtension(source).ToLowerInvariant();
+        if (ext == ".png") return XImage.FromFile(source);
+        if (ext is ".jpg" or ".jpeg")
+        {
+            if (!OperatingSystem.IsWindows() || !TryRotateUpright(source, buffer)) return XImage.FromFile(source);
+        }
+        else if (OperatingSystem.IsWindows()) ToPng(source, buffer);
+        else throw new PlatformNotSupportedException("BMP/GIF/TIFF conversion needs Windows");
+        buffer.Position = 0;
+        return XImage.FromStream(buffer);
+    }
+
+    /// <summary>Writes the JPEG re-encoded with its EXIF orientation applied; false (nothing written) if it is already upright.</summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static bool TryRotateUpright(string source, Stream jpeg)
+    {
+        const int orientationTag = 0x0112;
+        using var img = System.Drawing.Image.FromFile(source);
+        if (!img.PropertyIdList.Contains(orientationTag)) return false;
+        var flip = img.GetPropertyItem(orientationTag)?.Value?[0] switch
+        {
+            2 => System.Drawing.RotateFlipType.RotateNoneFlipX,
+            3 => System.Drawing.RotateFlipType.Rotate180FlipNone,
+            4 => System.Drawing.RotateFlipType.Rotate180FlipX,
+            5 => System.Drawing.RotateFlipType.Rotate90FlipX,
+            6 => System.Drawing.RotateFlipType.Rotate90FlipNone,
+            7 => System.Drawing.RotateFlipType.Rotate270FlipX,
+            8 => System.Drawing.RotateFlipType.Rotate270FlipNone,
+            _ => System.Drawing.RotateFlipType.RotateNoneFlipNone,
+        };
+        if (flip == System.Drawing.RotateFlipType.RotateNoneFlipNone) return false;
+        img.RotateFlip(flip);
+        img.RemovePropertyItem(orientationTag);
+        var codec = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders().First(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
+        using var quality = new System.Drawing.Imaging.EncoderParameters(1);
+        quality.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 92L);
+        img.Save(jpeg, codec, quality);
+        return true;
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
@@ -111,7 +146,7 @@ internal sealed class TextConverter : NativeConverter
     {
         using var pager = new Pager(ct);
         var font = Pager.Font(NativeFonts.Mono, 9);
-        using var reader = new StreamReader(source, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        using var reader = new StreamReader(source, TextFile.Detect(source), detectEncodingFromByteOrderMarks: true);
         while (reader.ReadLine() is { } line) pager.Block(line, font, mono: true);
         pager.Save(tmp);
     }
@@ -123,7 +158,7 @@ internal sealed class MarkdownConverter : NativeConverter
 
     protected override void Render(string source, string tmp, CancellationToken ct)
     {
-        var doc = Markdown.Parse(File.ReadAllText(source));
+        var doc = Markdown.Parse(File.ReadAllText(source, TextFile.Detect(source)));
         using var pager = new Pager(ct);
         foreach (var block in doc) Draw(pager, block, 0);
         pager.Save(tmp);
@@ -188,7 +223,7 @@ internal sealed class MarkdownConverter : NativeConverter
 internal sealed partial class HtmlConverter : NativeConverter
 {
     // shortcut: only visible text is extracted (tags, script, style, comments dropped, entities decoded);
-    // layout, CSS, tables and images are not reproduced. Charset comes from the BOM, else UTF-8.
+    // layout, CSS, tables and images are not reproduced. Charset comes from the BOM, else UTF-8, else the ANSI code page (no <meta charset>).
     protected override string[] Extensions => [".html", ".htm"];
 
     [GeneratedRegex(@"<(script|style)\b.*?</\1\s*>|<!--.*?-->", RegexOptions.Singleline | RegexOptions.IgnoreCase, 5000)]
@@ -200,7 +235,7 @@ internal sealed partial class HtmlConverter : NativeConverter
 
     protected override void Render(string source, string tmp, CancellationToken ct)
     {
-        var html = Hidden().Replace(File.ReadAllText(source), " ");
+        var html = Hidden().Replace(File.ReadAllText(source, TextFile.Detect(source)), " ");
         html = Breaks().Replace(html, m => m.Value.StartsWith("</li", StringComparison.OrdinalIgnoreCase)
             || m.Value.StartsWith("</tr", StringComparison.OrdinalIgnoreCase) || m.Value.StartsWith("<br", StringComparison.OrdinalIgnoreCase) ? "\n" : "\n\n");
         var text = WebUtility.HtmlDecode(Tags().Replace(html, ""));
@@ -209,6 +244,27 @@ internal sealed partial class HtmlConverter : NativeConverter
         foreach (var line in text.Split('\n'))
             pager.Block(Regex.Replace(line, @"\s+", " ", RegexOptions.None, TimeSpan.FromSeconds(5)).Trim(), font);
         pager.Save(tmp);
+    }
+}
+
+internal static class TextFile
+{
+    static TextFile() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+    /// <summary>The BOM's encoding, else UTF-8 if every byte is valid UTF-8, else the ANSI code page (Excel "CSV", older Notepad files).</summary>
+    public static Encoding Detect(string path)
+    {
+        using var reader = new StreamReader(path, new UTF8Encoding(false, throwOnInvalidBytes: true), detectEncodingFromByteOrderMarks: true);
+        var buffer = new char[8192];
+        try
+        {
+            while (reader.Read(buffer, 0, buffer.Length) > 0) { /* validating only */ }
+            return reader.CurrentEncoding;
+        }
+        catch (DecoderFallbackException)
+        {
+            return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
+        }
     }
 }
 

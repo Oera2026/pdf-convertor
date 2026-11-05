@@ -49,6 +49,18 @@ public sealed class NativeConverterTests : IDisposable
     }
 
     [Fact]
+    public void Non_utf8_text_falls_back_to_the_ANSI_code_page()
+    {
+        var ansi = Path.Combine(dir, "ansi.csv");
+        File.WriteAllBytes(ansi, [0x63, 0x61, 0x66, 0xE9]); // "café" in Windows-1252, invalid as UTF-8
+        var utf8 = Path.Combine(dir, "utf8.csv");
+        File.WriteAllBytes(utf8, Utf8("café"));
+
+        Assert.Equal(System.Globalization.CultureInfo.CurrentCulture.TextInfo.ANSICodePage, TextFile.Detect(ansi).CodePage);
+        Assert.Equal(65001, TextFile.Detect(utf8).CodePage);
+    }
+
+    [Fact]
     public async Task Markdown_renders() =>
         Assert.True(await RunAsync("a.md", Utf8("# Title\n\n- one\n- two\n\n```\ncode here\n```\n\nPara **bold**.")) >= 1);
 

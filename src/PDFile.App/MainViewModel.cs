@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Microsoft.UI.Xaml.Media;
 using PDFile.Core;
 using PDFile.Core.Diagnostics;
+using PDFile.Office;
 
 namespace PDFile.App;
 
@@ -48,6 +49,8 @@ public sealed class MainViewModel : Observable
     private CancellationTokenSource? _cts;
     private int _scanVersion;
     private string? _root;
+    private bool _rootIsFolder; // false for dropped files: there is no folder to rescan
+    private bool _scanning;
     private bool _includeSubfolders = true;
     private bool _isMerged;
     private string _separateOutput = "";
@@ -103,9 +106,17 @@ public sealed class MainViewModel : Observable
             return _isMerged ? "IconMerge" : "IconConvert";
         }
     }
-    public bool CanConvert => _isRunning ? !_isStopping : Items.Any(i => i.IsIncluded);
+    // Not while scanning: the list (and the output path, already switched to the new folder) would not match.
+    public bool CanConvert => _isRunning ? !_isStopping : !_scanning && Items.Any(i => i.IsIncluded);
 
-    public string EmptyHint => HasRoot ? "No supported files found in this folder." : "or drop a folder or files here";
+    public string EmptyHint
+    {
+        get
+        {
+            if (_scanning) return "Scanning...";
+            return HasRoot ? "No supported files found in this folder." : "or drop a folder or files here";
+        }
+    }
     public string CountText
     {
         get
@@ -116,7 +127,7 @@ public sealed class MainViewModel : Observable
     }
 
     public string? MergedPdfPath => _mergedPdfPath;
-    public string? OutputFolderToOpen => _mergedPdfPath is not null ? Path.GetDirectoryName(_mergedPdfPath) : _separateOutput;
+    public string? OutputFolderToOpen => _isMerged ? Path.GetDirectoryName(_mergedPdfPath ?? _mergedOutput) : _separateOutput;
 
     public void SetMode(bool merged)
     {
@@ -153,6 +164,7 @@ public sealed class MainViewModel : Observable
     public Task LoadFolderAsync(string folder)
     {
         _root = folder;
+        _rootIsFolder = true;
         _separateOutput = Path.Combine(folder, SeparateFolderName);
         _mergedOutput = Path.Combine(folder, MergedFileName);
         Raise(nameof(HasRoot));
@@ -163,11 +175,13 @@ public sealed class MainViewModel : Observable
     /// <summary>Scans the chosen folder again (also used when "Include subfolders" changes).</summary>
     public async Task RescanAsync()
     {
-        if (_root is not { } root || _isRunning) return;
+        if (_root is not { } root || !_rootIsFolder || _isRunning) return;
         var version = ++_scanVersion;
         var includeSub = _includeSubfolders;
+        SetScanning(true);
         var result = await Task.Run(() => FolderScanner.Scan(root, includeSub, CanConvertPath), CancellationToken.None);
-        if (version != _scanVersion) return; // a newer scan superseded this one
+        if (version != _scanVersion) return; // a newer scan or a file drop superseded this one
+        _scanning = false; // Show raises the dependent properties
         // Our own outputs would otherwise show up as input files on a rescan.
         var jobs = result.Jobs.Where(j => !j.RelativePath.StartsWith(SeparateFolderName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
                                           && !j.RelativePath.Equals(MergedFileName, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -178,7 +192,9 @@ public sealed class MainViewModel : Observable
     {
         if (files.Count == 0) return;
         _scanVersion++;
+        _scanning = false;
         _root = Path.GetDirectoryName(files[0]) ?? files[0];
+        _rootIsFolder = false;
         _separateOutput = Path.Combine(_root, SeparateFolderName);
         _mergedOutput = Path.Combine(_root, MergedFileName);
         var supported = files.Distinct(StringComparer.OrdinalIgnoreCase).Where(CanConvertPath).ToList();
@@ -200,6 +216,13 @@ public sealed class MainViewModel : Observable
         }
         Raise(nameof(EmptyHint));
         RaiseCounts();
+    }
+
+    private void SetScanning(bool scanning)
+    {
+        _scanning = scanning;
+        Raise(nameof(EmptyHint));
+        Raise(nameof(CanConvert));
     }
 
     private void OnItemChanged(object? sender, PropertyChangedEventArgs e)
@@ -229,8 +252,7 @@ public sealed class MainViewModel : Observable
         if (selected.Count == 0) return;
         DismissSummary();
         foreach (var item in selected) item.Status = FileStatus.Ready;
-        var byPath = selected.ToDictionary(i => i.RelativePath, StringComparer.OrdinalIgnoreCase);
-        var byJob = selected.ToDictionary(i => i.Job);
+        var byJob = selected.ToDictionary(i => i.Job); // not by name: dropped files from search results can share one
         var options = new BatchOptions(selected.Select(i => i.Job).ToList(), _isMerged ? OutputMode.MergedPdf : OutputMode.SeparatePdfs, OutputPath);
         using var cts = new CancellationTokenSource();
         _cts = cts;
@@ -239,7 +261,7 @@ public sealed class MainViewModel : Observable
         _done = 0;
         SetProgress(0, "Starting...");
         // Progress<T> captures the UI synchronization context here, so callbacks arrive on the UI thread.
-        var progress = new Progress<BatchProgress>(p => OnProgress(p, byPath));
+        var progress = new Progress<BatchProgress>(p => OnProgress(p, byJob));
         BatchSummary? summary = null;
         try
         {
@@ -251,6 +273,8 @@ public sealed class MainViewModel : Observable
         }
         finally
         {
+            // A hidden Office left running between batches can swallow files the user opens from Explorer.
+            await Task.Run(() => OfficeConverters.EndSessions(_converters), CancellationToken.None);
             _cts = null;
             _isStopping = false;
             SetRunning(false);
@@ -263,10 +287,10 @@ public sealed class MainViewModel : Observable
         Finish(summary, byJob);
     }
 
-    private void OnProgress(BatchProgress p, Dictionary<string, FileItem> byPath)
+    private void OnProgress(BatchProgress p, Dictionary<ConversionJob, FileItem> byJob)
     {
         var converting = p.Stage == "Converting";
-        if (byPath.TryGetValue(p.CurrentFile, out var item))
+        if (p.Job is { } job && byJob.TryGetValue(job, out var item))
         {
             item.Status = p.Stage switch
             {

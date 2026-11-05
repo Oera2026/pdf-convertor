@@ -39,6 +39,12 @@ public static class OfficeConverters
 
     public static void RegisterWithCrashReport() => CrashReport.ExtraInfoProvider = DescribeInstalled;
 
+    /// <summary>Call after each batch: quits the Office instances PDFile started (blocks up to ~8 s per app). The next file starts a fresh one.</summary>
+    public static void EndSessions(IEnumerable<IConverter> converters)
+    {
+        foreach (OfficeApp app in converters.OfType<OfficeApp>()) app.EndSession();
+    }
+
     private static OfficeDiagnostics.InstalledApp Inspect(string name, string progId)
     {
         bool registered = Type.GetTypeFromProgID(progId) is not null;

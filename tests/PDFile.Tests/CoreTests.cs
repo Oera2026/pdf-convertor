@@ -41,6 +41,19 @@ public class CoreScannerTests
         var deep = FolderScanner.Scan(d.Path, true, e => e == ".docx");
         Assert.Contains(deep.Jobs, j => j.RelativePath == Path.Combine("sub", "1.docx"));
     }
+
+    [Fact]
+    public void SymlinkedFolderIsNotFollowed()
+    {
+        using var d = new CoreTempDir();
+        Directory.CreateDirectory(Path.Combine(d.Path, "real"));
+        File.WriteAllText(Path.Combine(d.Path, "real", "1.docx"), "x");
+        try { Directory.CreateSymbolicLink(Path.Combine(d.Path, "link"), Path.Combine(d.Path, "real")); }
+        catch (Exception e) when (e is UnauthorizedAccessException or IOException) { return; } // Windows without Developer Mode
+
+        var deep = FolderScanner.Scan(d.Path, true, e => e == ".docx");
+        Assert.Equal(new[] { Path.Combine("real", "1.docx") }, deep.Jobs.Select(j => j.RelativePath));
+    }
 }
 
 [Collection("core-state")] // BatchState is global
@@ -49,9 +62,11 @@ public class CoreBatchRunnerTests
     private sealed class FakeConverter : IConverter
     {
         public Func<string, CancellationToken, Task>? Hook;
+        public List<string> Dests { get; } = [];
         public bool CanConvert(string extension) => extension == ".txt";
         public async Task ConvertAsync(string sourcePath, string destPdfPath, CancellationToken ct)
         {
+            Dests.Add(destPdfPath);
             if (Hook is not null) await Hook(sourcePath, ct);
             File.WriteAllText(destPdfPath, "pdf");
         }
@@ -76,6 +91,15 @@ public class CoreBatchRunnerTests
         return new ConversionJob(p, rel);
     }
 
+    private static ConversionJob PdfJob(CoreTempDir d, string rel)
+    {
+        var job = Job(d, rel);
+        using var doc = new PdfDocument();
+        doc.AddPage();
+        doc.Save(job.SourcePath);
+        return job;
+    }
+
     [Fact]
     public async Task SeparateModeFailureContinuesAndCollisionsAreNumbered()
     {
@@ -90,6 +114,8 @@ public class CoreBatchRunnerTests
         Assert.Contains("0x80004005", sum.Results[1].ErrorReport);
         Assert.Contains("Stage: export", sum.Results[1].ErrorReport);
         Assert.True(File.Exists(Path.Combine(d.Path, "out", "s", "c.pdf")));
+        Assert.All(conv.Dests, p => Assert.StartsWith(Path.Combine(Path.GetTempPath(), "PDFile"), p)); // short temp path, moved into place afterwards
+        Assert.False(File.Exists(Path.Combine(d.Path, "out", "bad.pdf")));
 
         var again = await runner.RunAsync(opts with { Jobs = [jobs[0]] }, new Progress<BatchProgress>(), default);
         Assert.EndsWith("a (2).pdf", again.Results[0].PdfPath);
@@ -100,7 +126,7 @@ public class CoreBatchRunnerTests
     {
         using var d = new CoreTempDir();
         var merger = new FakeMerger();
-        var pdf = Job(d, "p.pdf");
+        var pdf = PdfJob(d, "p.pdf");
         var jobs = new[] { Job(d, "a.txt"), pdf };
         var outPath = Path.Combine(d.Path, "all.pdf");
         var sum = await new BatchRunner([new FakeConverter()], merger).RunAsync(new BatchOptions(jobs, OutputMode.MergedPdf, outPath), new Progress<BatchProgress>(), default);
@@ -124,6 +150,22 @@ public class CoreBatchRunnerTests
         Assert.Null(sum.MergedPdfPath);
         Assert.False(File.Exists(outPath));
         Assert.Equal(Outcome.Cancelled, sum.Results[1].Outcome);
+        Assert.Equal(Outcome.Cancelled, sum.Results[0].Outcome); // converted, but no merged file exists, so not "converted"
+    }
+
+    [Fact]
+    public async Task MergedModeUnreadablePdfFailsAloneAndRestIsMerged()
+    {
+        using var d = new CoreTempDir();
+        var merger = new FakeMerger();
+        var jobs = new[] { Job(d, "a.txt"), Job(d, "broken.pdf"), PdfJob(d, "ok.pdf") }; // broken.pdf holds "x"
+        var outPath = Path.Combine(d.Path, "all.pdf");
+        var sum = await new BatchRunner([new FakeConverter()], merger).RunAsync(new BatchOptions(jobs, OutputMode.MergedPdf, outPath), new Progress<BatchProgress>(), default);
+
+        Assert.Equal(outPath, sum.MergedPdfPath);
+        Assert.Equal(new[] { Outcome.Succeeded, Outcome.Failed, Outcome.Succeeded }, sum.Results.Select(r => r.Outcome));
+        Assert.Contains("Stage: read", sum.Results[1].ErrorReport);
+        Assert.Equal(new[] { "a", "ok" }, merger.Parts!.Select(p => p.Bookmark));
     }
 }
 
@@ -140,6 +182,14 @@ public class CoreDiagnosticsTests
         Assert.Contains("0x800706BA", text);
         Assert.Contains("System.IO.IOException", text);
         Assert.Contains("outer", text);
+    }
+
+    [Fact]
+    public void MarkerOwnerCheckTreatsMissingOwnPidOrDeadPidAsNotRunning()
+    {
+        Assert.False(SessionMarker.OwnerIsRunning("garbage"));
+        Assert.False(SessionMarker.OwnerIsRunning($"2026-01-01 pid {Environment.ProcessId}: started")); // our own pid: a reused id
+        Assert.False(SessionMarker.OwnerIsRunning($"2026-01-01 pid {int.MaxValue}: started"));
     }
 
     [Fact]

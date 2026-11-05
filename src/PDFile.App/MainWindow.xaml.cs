@@ -36,6 +36,8 @@ public sealed partial class MainWindow : Window
         RootGrid.Loaded += (_, _) => Safe.Run(() => TestCrash.AfterWindowShown(DispatcherQueue));
     }
 
+    private const string NoPathMessage = "That location has no folder on disk (a phone, library or archive). Copy the files to a normal folder first.";
+
     public MainViewModel Vm { get; }
 
     private nint Hwnd => WindowNative.GetWindowHandle(this);
@@ -46,7 +48,9 @@ public sealed partial class MainWindow : Window
         picker.FileTypeFilter.Add("*");
         InitializeWithWindow.Initialize(picker, Hwnd);
         var folder = await picker.PickSingleFolderAsync();
-        if (folder is not null) await Vm.LoadFolderAsync(folder.Path);
+        if (folder is null) return;
+        if (folder.Path.Length == 0) Notice(NoPathMessage);
+        else await Vm.LoadFolderAsync(folder.Path);
     });
 
     private void OnIncludeSubfolders(object sender, RoutedEventArgs e) => Safe.Fire(() =>
@@ -68,7 +72,7 @@ public sealed partial class MainWindow : Window
             var file = await picker.PickSaveFileAsync();
             chosen = file?.Path;
             // The picker creates an empty placeholder file; remove it so the converter does not treat the name as taken.
-            if (chosen is not null && new FileInfo(chosen).Length == 0) File.Delete(chosen);
+            if (!string.IsNullOrEmpty(chosen) && File.Exists(chosen) && new FileInfo(chosen).Length == 0) File.Delete(chosen);
         }
         else
         {
@@ -77,7 +81,9 @@ public sealed partial class MainWindow : Window
             InitializeWithWindow.Initialize(picker, Hwnd);
             chosen = (await picker.PickSingleFolderAsync())?.Path;
         }
-        if (chosen is not null) Vm.SetOutput(chosen);
+        if (chosen is null) return;
+        if (chosen.Length == 0) Notice(NoPathMessage);
+        else Vm.SetOutput(chosen);
     });
 
     private void OnConvertOrStop(object sender, RoutedEventArgs e) => Safe.Fire(Vm.ConvertOrStopAsync);
@@ -95,17 +101,20 @@ public sealed partial class MainWindow : Window
         var deferral = e.GetDeferral();
         Safe.Fire(async () =>
         {
+            IReadOnlyList<IStorageItem> items;
             try
             {
-                var items = await e.DataView.GetStorageItemsAsync();
-                var folder = items.OfType<StorageFolder>().FirstOrDefault(); // one folder wins over loose files
-                if (folder is not null) await Vm.LoadFolderAsync(folder.Path);
-                else Vm.LoadFiles(items.OfType<StorageFile>().Select(f => f.Path).ToList());
+                items = await e.DataView.GetStorageItemsAsync();
             }
             finally
             {
-                deferral.Complete();
+                deferral.Complete(); // release Explorer now: it waits on the drop, and a big folder scan would freeze it
             }
+            var onDisk = items.Where(i => i.Path.Length > 0).ToList();
+            if (onDisk.Count < items.Count) Notice(NoPathMessage);
+            var folder = onDisk.OfType<StorageFolder>().FirstOrDefault(); // one folder wins over loose files
+            if (folder is not null) await Vm.LoadFolderAsync(folder.Path);
+            else Vm.LoadFiles(onDisk.OfType<StorageFile>().Select(f => f.Path).ToList());
         });
     }
 
@@ -117,17 +126,33 @@ public sealed partial class MainWindow : Window
     private void OnOpenOutput(object sender, RoutedEventArgs e) => Safe.Run(() =>
     {
         var folder = Vm.OutputFolderToOpen;
-        if (!string.IsNullOrEmpty(folder)) Directory.CreateDirectory(folder); // nothing was written if every file failed
-        if (!string.IsNullOrEmpty(folder)) Shell.Open(folder);
+        if (string.IsNullOrEmpty(folder)) return;
+        Directory.CreateDirectory(folder); // nothing was written if every file failed
+        OpenOrNotice(folder);
     });
 
-    private void OnOpenMerged(object sender, RoutedEventArgs e) => Safe.Run(() => Shell.Open(Vm.MergedPdfPath!));
+    private void OnOpenMerged(object sender, RoutedEventArgs e) => Safe.Run(() => OpenOrNotice(Vm.MergedPdfPath!));
 
     private void OnDismissSummary(object sender, RoutedEventArgs e) => Safe.Run(Vm.DismissSummary);
 
     private void OnOpenLogs(object sender, RoutedEventArgs e) => Safe.Run(() =>
     {
         Directory.CreateDirectory(Log.LogDirectory);
-        Shell.Open(Log.LogDirectory);
+        OpenOrNotice(Log.LogDirectory);
     });
+
+    // A moved/deleted file or a missing file association must not close the app (and lose the summary) via the crash path.
+    private void OpenOrNotice(string path)
+    {
+        try { Shell.Open(path); }
+        catch (System.ComponentModel.Win32Exception ex) { Notice($"Could not open {path}: {ex.Message}", ex); }
+    }
+
+    /// <summary>A problem that is not fatal: shown in the bar, full details in the log.</summary>
+    private void Notice(string message, Exception? ex = null)
+    {
+        Log.Error(message, ex);
+        NoticeBar.Message = message;
+        NoticeBar.IsOpen = true;
+    }
 }

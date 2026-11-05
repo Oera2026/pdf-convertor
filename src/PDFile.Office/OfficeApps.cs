@@ -32,6 +32,7 @@ internal sealed class WordApp : OfficeApp
     }
 
     protected override void Close(dynamic doc) => doc.Close(0);
+    protected override int OpenDocuments(dynamic app) => app.Documents.Count;
     protected override void Quit(dynamic app) => app.Quit(0);
 }
 
@@ -59,6 +60,7 @@ internal sealed class ExcelApp : OfficeApp
     protected override void Export(dynamic doc, string dest) => doc.ExportAsFixedFormat(0, dest);
 
     protected override void Close(dynamic doc) => doc.Close(false);
+    protected override int OpenDocuments(dynamic app) => app.Workbooks.Count; // automation instances load no XLStart/PERSONAL.XLSB
 }
 
 internal sealed class PowerPointApp : OfficeApp
@@ -89,4 +91,5 @@ internal sealed class PowerPointApp : OfficeApp
     }
 
     protected override void Close(dynamic doc) => doc.Close();
+    protected override int OpenDocuments(dynamic app) => app.Presentations.Count;
 }

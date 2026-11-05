@@ -31,6 +31,7 @@
             </InfoBar>
             <InfoBar x:Name="OfficeBar" Severity="Warning" IsClosable="False" IsOpen="False"
                      Message="Microsoft Office not detected: Word/Excel/PowerPoint files will be skipped" />
+            <InfoBar x:Name="NoticeBar" Severity="Error" IsOpen="False" />
         </StackPanel>
 
         <!-- Controls (shown once a folder or files were chosen) -->

@@ -1,0 +1,248 @@
+{
+  "PDFile.slnx": {
+    "mtime": 1793884832.8479404,
+    "seen": 1793885162.4135926,
+    "ast_hash": "be2a7824ecd948427ba01606da851fa7",
+    "semantic_hash": "be2a7824ecd948427ba01606da851fa7"
+  },
+  "src/PDFile.App/App.xaml": {
+    "mtime": 1793884726.539288,
+    "seen": 1793885162.4135976,
+    "ast_hash": "96978b405b798c0f466aa656805186bd",
+    "semantic_hash": "96978b405b798c0f466aa656805186bd"
+  },
+  "src/PDFile.App/App.xaml.cs": {
+    "mtime": 1793884754.2155018,
+    "seen": 1793885162.4136004,
+    "ast_hash": "001e889d57b9be94dd81665f36cf03e4",
+    "semantic_hash": "001e889d57b9be94dd81665f36cf03e4"
+  },
+  "src/PDFile.App/Fatal.cs": {
+    "mtime": 1793884889.2842298,
+    "seen": 1793885162.4136019,
+    "ast_hash": "4087122612823110934fb69ecf131f3f",
+    "semantic_hash": "4087122612823110934fb69ecf131f3f"
+  },
+  "src/PDFile.App/Icon.xaml": {
+    "mtime": 1793884726.5412881,
+    "seen": 1793885162.4136028,
+    "ast_hash": "3d2169cad7de62eceaaf8b66b0a975f3",
+    "semantic_hash": "3d2169cad7de62eceaaf8b66b0a975f3"
+  },
+  "src/PDFile.App/Icon.xaml.cs": {
+    "mtime": 1793884726.5440814,
+    "seen": 1793885162.413604,
+    "ast_hash": "41dbef523c4c9ea735137d136dc4f69a",
+    "semantic_hash": "41dbef523c4c9ea735137d136dc4f69a"
+  },
+  "src/PDFile.App/Icons.xaml": {
+    "mtime": 1793884706.2931318,
+    "seen": 1793885162.4136055,
+    "ast_hash": "f879927392153f2fb8b5b29c8fbea667",
+    "semantic_hash": "f879927392153f2fb8b5b29c8fbea667"
+  },
+  "src/PDFile.App/MainViewModel.cs": {
+    "mtime": 1793886100.1241245,
+    "seen": 1793886271.9740562,
+    "ast_hash": "5b406ce20f75f6c896a65ebed207c244",
+    "semantic_hash": ""
+  },
+  "src/PDFile.App/MainWindow.xaml": {
+    "mtime": 1793886131.7621224,
+    "seen": 1793886271.974058,
+    "ast_hash": "aaae0675fc1df79d8cdb1c18da8cdd40",
+    "semantic_hash": ""
+  },
+  "src/PDFile.App/MainWindow.xaml.cs": {
+    "mtime": 1793886131.7617507,
+    "seen": 1793886271.9740593,
+    "ast_hash": "ef52a9b5731599df5876cf48d439e053",
+    "semantic_hash": ""
+  },
+  "src/PDFile.App/Observable.cs": {
+    "mtime": 1793884726.5442882,
+    "seen": 1793885162.4136105,
+    "ast_hash": "09dbe03cb0cf277c79f63c0d8453e34d",
+    "semantic_hash": "09dbe03cb0cf277c79f63c0d8453e34d"
+  },
+  "src/PDFile.App/PDFile.App.csproj": {
+    "mtime": 1793884726.536288,
+    "seen": 1793885162.413612,
+    "ast_hash": "43a1c71a95af91d1117aae60dc64c74c",
+    "semantic_hash": "43a1c71a95af91d1117aae60dc64c74c"
+  },
+  "src/PDFile.App/Program.cs": {
+    "mtime": 1793884889.284032,
+    "seen": 1793885162.4136128,
+    "ast_hash": "d9edbb47466bd027ec970219398f8417",
+    "semantic_hash": "d9edbb47466bd027ec970219398f8417"
+  },
+  "src/PDFile.App/Shell.cs": {
+    "mtime": 1793884742.7964137,
+    "seen": 1793885162.413614,
+    "ast_hash": "093cc862c254eea084ef6d7c6e6c3cf0",
+    "semantic_hash": "093cc862c254eea084ef6d7c6e6c3cf0"
+  },
+  "src/PDFile.App/TestCrash.cs": {
+    "mtime": 1793884898.9786208,
+    "seen": 1793885162.4136147,
+    "ast_hash": "dc870df5e57bc89a4db3f8c5684f1aa2",
+    "semantic_hash": "dc870df5e57bc89a4db3f8c5684f1aa2"
+  },
+  "src/PDFile.Core/BatchRunner.cs": {
+    "mtime": 1793886255.5390909,
+    "seen": 1793886271.9740672,
+    "ast_hash": "c78636aeec3923432fa12ce410def06e",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Core/Contracts.cs": {
+    "mtime": 1793884308.8290718,
+    "seen": 1793885162.4136171,
+    "ast_hash": "902599d929f55bb50be7a4e7466d80ea",
+    "semantic_hash": "902599d929f55bb50be7a4e7466d80ea"
+  },
+  "src/PDFile.Core/Diagnostics/AppPaths.cs": {
+    "mtime": 1793884526.0097413,
+    "seen": 1793885162.413618,
+    "ast_hash": "0a65cc3109991b94b5d8912842c597d0",
+    "semantic_hash": "0a65cc3109991b94b5d8912842c597d0"
+  },
+  "src/PDFile.Core/Diagnostics/BatchState.cs": {
+    "mtime": 1793884526.0137415,
+    "seen": 1793885162.4136193,
+    "ast_hash": "c88a08f1f96228c8631acfd518d1e3d4",
+    "semantic_hash": "c88a08f1f96228c8631acfd518d1e3d4"
+  },
+  "src/PDFile.Core/Diagnostics/CrashReport.cs": {
+    "mtime": 1793884526.0167415,
+    "seen": 1793885162.4136202,
+    "ast_hash": "84264c6444269d15d865695ec84e87ea",
+    "semantic_hash": "84264c6444269d15d865695ec84e87ea"
+  },
+  "src/PDFile.Core/Diagnostics/ExceptionFormatter.cs": {
+    "mtime": 1793884526.0147414,
+    "seen": 1793885162.4136212,
+    "ast_hash": "7ddb05aa21fa3befafcf84033c10233d",
+    "semantic_hash": "7ddb05aa21fa3befafcf84033c10233d"
+  },
+  "src/PDFile.Core/Diagnostics/Log.cs": {
+    "mtime": 1793884535.673867,
+    "seen": 1793885162.4136224,
+    "ast_hash": "41f4bbf4663d43eacb30c8af31f6ce80",
+    "semantic_hash": "41f4bbf4663d43eacb30c8af31f6ce80"
+  },
+  "src/PDFile.Core/Diagnostics/SessionMarker.cs": {
+    "mtime": 1793886009.0708704,
+    "seen": 1793886271.9740756,
+    "ast_hash": "506b9439d149f0e0e19e20395f796e65",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Core/FolderScanner.cs": {
+    "mtime": 1793885952.8871098,
+    "seen": 1793886271.974077,
+    "ast_hash": "8d10195ae2502c0e26b0706241d67e4a",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Core/Native/NativeConverters.cs": {
+    "mtime": 1793885997.0044925,
+    "seen": 1793886271.974078,
+    "ast_hash": "64cf0fc0105d40eb11dcf200405e5519",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Core/Native/NativeFonts.cs": {
+    "mtime": 1793884551.5874574,
+    "seen": 1793885162.4136271,
+    "ast_hash": "c9b2c21412a458fc8c568c1f51dc4b6b",
+    "semantic_hash": "c9b2c21412a458fc8c568c1f51dc4b6b"
+  },
+  "src/PDFile.Core/PDFile.Core.csproj": {
+    "mtime": 1793886201.379977,
+    "seen": 1793886271.9740806,
+    "ast_hash": "d0c3e02d74dc9e7e0132f598e7da86ee",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Core/PdfMerger.cs": {
+    "mtime": 1793884526.0207415,
+    "seen": 1793885162.4136293,
+    "ast_hash": "ce6e39f8671d977c8bca02235684507d",
+    "semantic_hash": "ce6e39f8671d977c8bca02235684507d"
+  },
+  "src/PDFile.Office/OfficeApp.cs": {
+    "mtime": 1793886056.8489494,
+    "seen": 1793886271.9740827,
+    "ast_hash": "91e25dd4418c67e236b7c1115130d8a0",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Office/OfficeApps.cs": {
+    "mtime": 1793886068.4554644,
+    "seen": 1793886271.9740841,
+    "ast_hash": "48f1c8772dc4315c6b473ea107c13c7d",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Office/OfficeConverters.cs": {
+    "mtime": 1793886068.5550652,
+    "seen": 1793886271.974085,
+    "ast_hash": "cd9dd90624600252f46654e02b261b3e",
+    "semantic_hash": ""
+  },
+  "src/PDFile.Office/OfficeDiagnostics.cs": {
+    "mtime": 1793884629.8665075,
+    "seen": 1793885162.4136333,
+    "ast_hash": "983f1550270c0bd50fd2f5991f4bca93",
+    "semantic_hash": "983f1550270c0bd50fd2f5991f4bca93"
+  },
+  "src/PDFile.Office/PDFile.Office.csproj": {
+    "mtime": 1793884308.8260717,
+    "seen": 1793885162.4136343,
+    "ast_hash": "f497eb12efa68a2943d980e807f9ece3",
+    "semantic_hash": "f497eb12efa68a2943d980e807f9ece3"
+  },
+  "src/PDFile.Office/StaWorker.cs": {
+    "mtime": 1793884629.8738365,
+    "seen": 1793885162.4136353,
+    "ast_hash": "b9408d5cbe2269bfaf88887317809663",
+    "semantic_hash": "b9408d5cbe2269bfaf88887317809663"
+  },
+  "tests/PDFile.Tests/CoreTests.cs": {
+    "mtime": 1793886251.3291197,
+    "seen": 1793886271.9740903,
+    "ast_hash": "85d6b15736cc8c93d4c0ee01870df98b",
+    "semantic_hash": ""
+  },
+  "tests/PDFile.Tests/NativeConverterTests.cs": {
+    "mtime": 1793886223.8486617,
+    "seen": 1793886271.9740915,
+    "ast_hash": "0e53c9410b81d162294b7ba518aaef9a",
+    "semantic_hash": ""
+  },
+  "tests/PDFile.Tests/PDFile.Tests.csproj": {
+    "mtime": 1793885905.3147888,
+    "seen": 1793886271.9740927,
+    "ast_hash": "c6030d82e46c0e3a0b9ad1a75af9521a",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ponytail/SKILL.md": {
+    "mtime": 1793884083.309783,
+    "seen": 1793886271.9740946,
+    "ast_hash": "546be8ebd490e5b8d3b291c33442641a",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1793884185.7251291,
+    "seen": 1793886271.974096,
+    "ast_hash": "1cf5982dcebcfa31eea55ba2e03fc43c",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1793884917.8587668,
+    "seen": 1793886271.9740973,
+    "ast_hash": "e3156ff2470c426595bc5bf5ef52edb6",
+    "semantic_hash": ""
+  },
+  "src/PDFile.App/Assets/app.svg": {
+    "mtime": 1793884713.5201876,
+    "seen": 1793886271.9740982,
+    "ast_hash": "cb1b9bddc380410e8f51f23bdcbb05c3",
+    "semantic_hash": ""
+  }
+}

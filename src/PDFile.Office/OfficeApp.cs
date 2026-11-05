@@ -23,6 +23,7 @@ internal abstract class OfficeApp : IConverter, IAsyncDisposable, IDisposable
         public string Version = "?";
         public volatile string Stage = "start";
         public volatile bool Broken;              // set by the worker; caller retires the session afterwards
+        public volatile bool HandedOver;          // holds the user's documents: left running, never quit or killed
     }
 
     private readonly object _gate = new();
@@ -40,6 +41,7 @@ internal abstract class OfficeApp : IConverter, IAsyncDisposable, IDisposable
     protected abstract object Open(dynamic app, string path);
     protected abstract void Export(dynamic doc, string dest);
     protected abstract void Close(dynamic doc);
+    protected abstract int OpenDocuments(dynamic app);
     protected virtual void Quit(dynamic app) => app.Quit();
 
     public bool CanConvert(string extension) => Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
@@ -220,20 +222,43 @@ internal abstract class OfficeApp : IConverter, IAsyncDisposable, IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        Session? s;
-        lock (_gate) { _disposed = true; s = _session; _session = null; }
+        lock (_gate) _disposed = true;
         AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+        EndSession();
+    }
+
+    /// <summary>Quits the instance PDFile started (never the user's), so no hidden Office lingers between batches. Blocks up to ~8 s.</summary>
+    public void EndSession()
+    {
+        Session? s;
+        lock (_gate) { s = _session; _session = null; }
         if (s is null) return;
         if (!s.Attached)
-            _ = ObserveLateAsync(s.Worker.RunAsync(() => { s.Stage = "quit"; Quit((dynamic)s.App!); return 0; }));
+            _ = ObserveLateAsync(s.Worker.RunAsync(() => { s.Stage = "quit"; QuitUnlessUserDocuments(s); return 0; }));
         s.Worker.Complete();
         bool quitInTime = s.Worker.Join(TimeSpan.FromSeconds(5));
         if (!quitInTime) Log.Warn($"{Name}: Quit did not finish in 5s, killing process.");
         foreach (Process p in s.Owned)
         {
-            if (!quitInTime || !p.WaitForExit(3000)) KillOwned(s);
+            if (!s.HandedOver && (!quitInTime || !p.WaitForExit(3000))) KillOwned(s);
             p.Dispose();
         }
+    }
+
+    // Files the user opens from Explorer can land in our hidden instance (PowerPoint always shares one): Quit would discard their work.
+    private void QuitUnlessUserDocuments(Session s)
+    {
+        if (s.App is null) return; // never started
+        dynamic app = s.App;
+        int open = OpenDocuments(app);
+        if (open == 0)
+        {
+            Quit(app);
+            return;
+        }
+        s.HandedOver = true;
+        app.Visible = true;
+        Log.Warn($"{Name}: {open} document(s) not opened by PDFile are in its instance; it was made visible and left running instead of quitting.");
     }
 
     public ValueTask DisposeAsync() => new(Task.Run(Dispose));

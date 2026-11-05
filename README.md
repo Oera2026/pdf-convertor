@@ -7,6 +7,9 @@ Windows 11 tool that batch-converts a folder (or dropped files) of Word, Excel, 
 - Build: .NET 10 SDK on Windows.
 
 ## Build and run
+Easiest: double-click `run.bat` (installs the .NET 10 SDK via winget if missing, restores packages, builds and launches the app). Office is not installed by it.
+
+Manual:
 ```
 dotnet run --project src/PDFile.App
 dotnet publish src/PDFile.App -c Release -r win-x64 --self-contained   # or -r win-arm64
