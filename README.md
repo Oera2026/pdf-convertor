@@ -6,6 +6,17 @@ Windows 11 tool that batch-converts a folder (or dropped files) of Word, Excel, 
 - Windows 11 (x64 or arm64), Microsoft Office installed for Word/Excel/PowerPoint files (other types convert without Office).
 - Build: .NET 10 SDK on Windows.
 
+## Install dependencies
+`run.bat` does all of this for you. To do it by hand:
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (or `winget install Microsoft.DotNet.SDK.10`)
+- NuGet packages, restored automatically with `dotnet restore PDFile.slnx` from [nuget.org](https://www.nuget.org):
+  [Microsoft.WindowsAppSDK 2.6.5](https://www.nuget.org/packages/Microsoft.WindowsAppSDK/2.6.5),
+  [PDFsharp 6.2.4](https://www.nuget.org/packages/PDFsharp/6.2.4),
+  [Markdig 0.45.0](https://www.nuget.org/packages/Markdig/0.45.0),
+  [System.Drawing.Common 10.0.14](https://www.nuget.org/packages/System.Drawing.Common/10.0.14),
+  [System.Security.Cryptography.Pkcs 10.0.14](https://www.nuget.org/packages/System.Security.Cryptography.Pkcs/10.0.14)
+- Offline: put the packages in an `offline-packages` folder next to `run.bat` and it restores from there without internet.
+
 ## Build and run
 Easiest: double-click `run.bat` (installs the .NET 10 SDK via winget if missing, restores packages, builds and launches the app). Office is not installed by it.
 
